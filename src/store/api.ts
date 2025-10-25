@@ -28,9 +28,8 @@ export const api = createApi({
     // Create base query with token
 
     const baseQuery = fetchBaseQuery({
-      baseUrl: `https://todo-app-backend-production-5872.up.railway.app/api`,
+      baseUrl: `${import.meta.env.VITE_API_URL}/api`,
       prepareHeaders: (headers) => {
-        console.log('API URL', import.meta.env.VITE_API_URL);
         if (session?.access_token) {
           headers.set('Authorization', `Bearer ${session.access_token}`);
         }
