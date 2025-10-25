@@ -26,6 +26,7 @@ export const api = createApi({
     } = await supabase.auth.getSession();
 
     // Create base query with token
+    console.log(import.meta.env.VITE_API_URL);
     const baseQuery = fetchBaseQuery({
       baseUrl: `${import.meta.env.VITE_API_URL}/api`,
       prepareHeaders: (headers) => {
