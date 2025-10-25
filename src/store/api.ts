@@ -27,7 +27,7 @@ export const api = createApi({
 
     // Create base query with token
     const baseQuery = fetchBaseQuery({
-      baseUrl: 'http://localhost:3000/api',
+      baseUrl: import.meta.env.VITE_API_URL,
       prepareHeaders: (headers) => {
         if (session?.access_token) {
           headers.set('Authorization', `Bearer ${session.access_token}`);
