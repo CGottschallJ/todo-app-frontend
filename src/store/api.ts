@@ -1,6 +1,5 @@
 import { supabase } from '@/lib/supabase';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import type { User } from '@supabase/supabase-js';
 
 interface List {
   id: string;
