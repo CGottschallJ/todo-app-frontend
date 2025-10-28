@@ -13,7 +13,7 @@ export default function DropdownDeleteListDialog({ listId }: { listId: string })
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Delete List</DropdownMenuItem>
+        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Delete List</DropdownMenuItem> {/* Prevent the dropdown menu from closing */}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
