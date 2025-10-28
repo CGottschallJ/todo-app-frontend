@@ -1,14 +1,14 @@
 import { supabase } from '@/lib/supabase';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-interface List {
+export interface List {
   id: string;
   name: string;
   user_id: string;
   created_at: string;
 }
 
-interface Todo {
+export interface ListItem {
   id: string;
   title: string;
   completed: boolean;
@@ -39,7 +39,7 @@ export const api = createApi({
 
     return baseQuery(args, api, extraOptions);
   },
-  tagTypes: ['LISTS', 'TODOS'],
+  tagTypes: ['LISTS', 'LIST_ITEMS'],
   endpoints: (builder) => ({
     // Lists endpoints
     getLists: builder.query<List[], void>({
@@ -59,37 +59,104 @@ export const api = createApi({
         url: `/lists/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['LISTS', 'TODOS'],
+      invalidatesTags: ['LISTS', 'LIST_ITEMS'],
+      onQueryStarted: async (args, { dispatch, queryFulfilled }) => {
+        const optimisticData = dispatch(
+          api.util.updateQueryData('getLists', undefined, (draft: List[]) => {
+            return draft.filter((list: List) => list.id !== args);
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          optimisticData.undo();
+        }
+      },
     }),
-    // Todos endpoints
-    getTodos: builder.query<Todo[], void>({
+    updateList: builder.mutation<List, { id: string; updates: Partial<List> }>({
+      query: ({ id, updates }) => ({
+        url: `/lists/${id}`,
+        method: 'PATCH',
+        body: updates,
+      }),
+      invalidatesTags: ['LISTS'],
+      onQueryStarted: async (args, { dispatch, queryFulfilled }) => {
+        const optimisticData = dispatch(
+          api.util.updateQueryData('getLists', undefined, (draft: List[]) => {
+            const list = JSON.parse(JSON.stringify(draft)).find((list: List) => list.id === args.id);
+            if (list) {
+              return draft.map((list: List) => (list.id === args.id ? { ...list, ...args.updates } : list));
+            }
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          optimisticData.undo();
+        }
+      },
+    }),
+
+    // ListItems endpoints
+    getListItems: builder.query<ListItem[], void>({
       query: () => '/todos',
-      providesTags: ['TODOS'],
+      providesTags: ['LIST_ITEMS'],
     }),
-    createTodo: builder.mutation<Todo, { title: string; list_id: string }>({
+    createListItem: builder.mutation<ListItem, { title: string; list_id: string }>({
       query: (body) => ({
         url: '/todos',
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['TODOS'],
+      invalidatesTags: ['LIST_ITEMS'],
     }),
-    updateTodo: builder.mutation<Todo, { id: string; updates: Partial<Todo> }>({
+    updateListItem: builder.mutation<ListItem, { id: string; updates: Partial<ListItem> }>({
       query: ({ id, updates }) => ({
         url: `/todos/${id}`,
         method: 'PATCH',
         body: updates,
       }),
-      invalidatesTags: ['TODOS'],
+      invalidatesTags: ['LIST_ITEMS'],
+
+      onQueryStarted: async (args, { dispatch, queryFulfilled }) => {
+        const optimisticData = dispatch(
+          // Gathering current state of the updated todo from RTK Query cache
+          api.util.updateQueryData('getListItems', undefined, (draft: ListItem[]) => {
+            const todo = JSON.parse(JSON.stringify(draft)).find((todo: ListItem) => todo.id === args.id);
+
+            // If the todo is found, update it with the new values
+            if (todo) {
+              return draft.map((todo: ListItem) => (todo.id === args.id ? { ...todo, ...args.updates } : todo));
+            }
+
+            // If the todo is not found, return the original draft
+            return draft;
+          })
+        );
+        try {
+          await queryFulfilled;
+        } catch {
+          optimisticData.undo();
+        }
+      },
     }),
-    deleteTodo: builder.mutation<void, string>({
+    deleteListItem: builder.mutation<void, string>({
       query: (id) => ({
         url: `/todos/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['TODOS'],
+      invalidatesTags: ['LIST_ITEMS'],
     }),
   }),
 });
 
-export const { useGetListsQuery, useCreateListMutation, useDeleteListMutation, useGetTodosQuery, useCreateTodoMutation, useUpdateTodoMutation, useDeleteTodoMutation } = api;
+export const {
+  useGetListsQuery,
+  useCreateListMutation,
+  useDeleteListMutation,
+  useUpdateListMutation,
+  useGetListItemsQuery,
+  useCreateListItemMutation,
+  useUpdateListItemMutation,
+  useDeleteListItemMutation,
+} = api;

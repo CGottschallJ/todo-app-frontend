@@ -1,19 +1,19 @@
 import { useState } from 'react';
-import { useGetListsQuery, useCreateListMutation, useDeleteListMutation } from '@/store/api';
+import { useGetListsQuery, useCreateListMutation, useGetListItemsQuery } from '@/store/api';
 import { Button } from '@/components/ui/button';
-import { TodoList } from './TodoList';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { logout } from '@/store/slices/authSlice';
 import { supabase } from '@/lib/supabase';
+import { TodoList } from './list/List';
 
 export function TodoDashboard() {
   const [newListName, setNewListName] = useState('');
   const { data: lists, isLoading } = useGetListsQuery();
   const [createList] = useCreateListMutation();
-  const [deleteList] = useDeleteListMutation();
-  const [selectedListId, setSelectedListId] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.auth.user);
+
+  const { data: listItems } = useGetListItemsQuery();
 
   const handleCreateList = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,11 +23,6 @@ export function TodoDashboard() {
     setNewListName('');
   };
 
-  const handleDeleteList = async (id: string) => {
-    if (confirm('Delete this list and all its todos?')) {
-      await deleteList(id);
-    }
-  };
   const handleLogout = async () => {
     await supabase.auth.signOut();
     dispatch(logout());
@@ -39,11 +34,6 @@ export function TodoDashboard() {
         <p className="text-gray-600">Loading...</p>
       </div>
     );
-  }
-
-  // If a list is selected, show TodoList component
-  if (selectedListId) {
-    return <TodoList listId={selectedListId} listName={lists?.find((l) => l.id === selectedListId)?.name || ''} onBack={() => setSelectedListId(null)} />;
   }
 
   return (
@@ -69,17 +59,9 @@ export function TodoDashboard() {
           <Button type="submit">Create List</Button>
         </form>
 
-        {/* Lists Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-3 gap-4">
           {lists?.map((list) => (
-            <div key={list.id} className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition" onClick={() => setSelectedListId(list.id)}>
-              <div className="flex justify-between items-start mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">{list.name}</h2>
-                <Button variant="destructive" size="sm" onClick={() => handleDeleteList(list.id)}>
-                  Delete
-                </Button>
-              </div>
-            </div>
+            <TodoList key={list.id} list={list} listItems={listItems?.filter((item) => item.list_id === list.id) || []} />
           ))}
         </div>
 
