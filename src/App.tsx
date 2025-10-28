@@ -1,5 +1,5 @@
 import './App.css';
-import { TodoDashboard } from './features/todos/TodoDashboard';
+import { TodoDashboard } from './features/lists/TodoDashboard';
 import { AuthProvider } from './features/auth/AuthProvider';
 
 function App() {
