@@ -1,20 +1,28 @@
-import { Dialog, DialogDescription, DialogTitle, DialogTrigger, DialogHeader, DialogFooter, DialogContent, DialogClose } from '@/components/ui/dialog';
+import { useState } from 'react';
+import { Dialog, DialogDescription, DialogTitle, DialogHeader, DialogFooter, DialogContent, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { useDeleteListMutation } from '@/store/api';
 
 export default function DropdownDeleteListDialog({ listId }: { listId: string }) {
   const [deleteList, { isLoading }] = useDeleteListMutation();
+  const [open, setOpen] = useState(false);
 
   const handleDeleteList = async () => {
     await deleteList(listId);
+    setOpen(false);
   };
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Delete List</DropdownMenuItem> {/* Prevent the dropdown menu from closing */}
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DropdownMenuItem
+        onSelect={(e) => {
+          e.preventDefault();
+          setOpen(true);
+        }}
+      >
+        Delete List
+      </DropdownMenuItem>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Delete List</DialogTitle>
