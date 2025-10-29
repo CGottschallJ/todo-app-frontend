@@ -30,13 +30,15 @@ export default function ListHeader({ listName, listId, completedListItems, incom
     <div className="flex items-center justify-between flex-col gap-2 w-full">
       <div className="flex items-center justify-between w-full">
         {isListNameEditing ? (
-          <Input type="text" value={editedListName} placeholder={listName} onChange={(e) => setEditedListName(e.target.value)} className="w-full" />
+          <form onSubmit={handleSaveListName} className="w-full">
+            <Input type="text" value={editedListName} placeholder={listName} onChange={(e) => setEditedListName(e.target.value)} className="w-full" autoFocus />
+          </form>
         ) : (
           <h1 className="text-2xl font-bold">{listName}</h1>
         )}
         {isListNameEditing && (
           <Button variant="icon" size="icon" onClick={handleSaveListName}>
-            <FaCheck />
+            <FaCheck className="text-green-700" />
           </Button>
         )}
 
